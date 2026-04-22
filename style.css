@@ -1,33 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
+
 body {
-    font-family: 'Cairo', sans-serif; /* خط عربي احترافي */
-    background-color: #f0f4f8;
+    background: linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%); /* خلفية مريحة ومبهجة */
+    font-family: 'Cairo', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
+    overflow: hidden;
 }
 
 #game-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 40px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
     text-align: center;
-    max-width: 400px;
+    border: 8px solid #FFF;
+    max-width: 500px;
     width: 90%;
 }
 
+h1 {
+    color: #4A4A4A;
+    font-size: 28px;
+    margin-bottom: 30px;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* ترتيب الخيارات في صفين */
+    gap: 20px;
+    margin-top: 20px;
+}
+
 .game-btn {
-    width: 80px;
-    height: 80px;
-    margin: 10px;
-    border: none;
-    border-radius: 15px;
+    aspect-ratio: 1; /* جعل الأزرار مربعة */
+    border: 6px solid white;
+    border-radius: 30px;
     cursor: pointer;
-    transition: transform 0.2s; /* حركة عند الضغط */
+    box-shadow: 0 10px 0px #ddd; /* تأثير 3D */
+    transition: all 0.1s;
 }
 
 .game-btn:active {
-    transform: scale(0.9);
+    transform: translateY(5px);
+    box-shadow: 0 5px 0px #ddd;
+}
+
+#feedback {
+    margin-top: 25px;
+    font-size: 24px;
+    font-weight: bold;
+    min-height: 40px;
 }
