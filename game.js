@@ -1,11 +1,10 @@
 /**
- * المحرك اللانهائي (Infinite Engine)
+ * المحرك اللانهائي المطور (Advanced Infinite Engine)
  */
 const GameState = {
     level: 1,
     score: 0,
     isProcessing: false,
-    // بنك المعرفة الشامل
     db: {
         colors: [
             {n: "الأخضر", i: "🌿", c: "#2ed573"}, {n: "الأزرق", i: "💎", c: "#1e90ff"},
@@ -22,31 +21,39 @@ const GameState = {
             {n: "الفيل", i: "🐘", c: "#70a1ff"}, {n: "الزرافة", i: "🦒", c: "#f1c40f"}
         ],
         numbers: [
-            {n: "1", i: "1️⃣", c: "#2ed573"}, {n: "5", i: "5️⃣", c: "#ffa502"},
-            {n: "9", i: "9️⃣", c: "#1e90ff"}, {n: "0", i: "0️⃣", c: "#747d8c"}
+            {n: "واحد", i: "1️⃣", c: "#2ed573"}, {n: "خمسة", i: "5️⃣", c: "#ffa502"},
+            {n: "تسعة", i: "9️⃣", c: "#1e90ff"}, {n: "صفر", i: "0️⃣", c: "#747d8c"},
+            {n: "أربعة", i: "4️⃣", c: "#ff4757"}, {n: "ثمانية", i: "8️⃣", c: "#6c5ce7"}
         ]
     }
 };
 
 const GameEngine = {
+    selectedVoice: null,
+
     start() {
+        // تهيئة الأصوات فور الضغط
+        this.loadVoices();
         document.getElementById('start-overlay').style.display = 'none';
         this.nextChallenge();
     },
 
     /**
-     * خوارزمية التوليد التلقائي
+     * خوارزمية اختيار الصوت العربي الصحيح (للكومبيوتر)
      */
+    loadVoices() {
+        const voices = window.speechSynthesis.getVoices();
+        // البحث عن صوت عربي (سلمى، شاكر، أو أي صوت يدعم ar)
+        this.selectedVoice = voices.find(v => v.lang.includes('ar')) || null;
+    },
+
     nextChallenge() {
-        // 1. اختيار نوع التحدي عشوائياً
         const categories = Object.keys(GameState.db);
         const randomCat = categories[Math.floor(Math.random() * categories.length)];
         
-        // 2. تحديد عدد الخيارات بناءً على المستوى (صعوبة تصاعدية)
-        // يبدأ بـ 2 ويزيد كل مستوى حتى يصل لـ 8 خيارات بحد أقصى
+        // صعوبة تصاعدية ذكية
         let count = Math.min(2 + Math.floor(GameState.level / 3), 8);
         
-        // 3. استخراج الخيارات عشوائياً
         const pool = [...GameState.db[randomCat]].sort(() => 0.5 - Math.random());
         const options = pool.slice(0, count);
         this.target = options[Math.floor(Math.random() * options.length)];
@@ -61,8 +68,6 @@ const GameEngine = {
 
         const grid = document.getElementById('options-grid');
         grid.innerHTML = '';
-        
-        // خوارزمية ذكية لتوزيع الشبكة (2 أعمدة أو 3 بناءً على العدد)
         grid.style.gridTemplateColumns = options.length > 4 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
 
         options.forEach(item => {
@@ -81,17 +86,21 @@ const GameEngine = {
         if (GameState.isProcessing) return;
         GameState.isProcessing = true;
 
+        const feedback = document.getElementById('feedback-area');
+
         if (selected.n === this.target.n) {
             GameState.score += 10;
-            GameState.level++; // تقدم لا نهائي
-            document.getElementById('feedback-area').innerHTML = "✨ رائعة!";
+            GameState.level++;
+            feedback.innerHTML = "✨ رائعة يا بطل!";
             new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3').play().catch(()=>{});
             
             setTimeout(() => {
+                feedback.innerHTML = "";
                 GameState.isProcessing = false;
                 this.nextChallenge();
             }, 1200);
         } else {
+            feedback.innerHTML = "حاول مرة أخرى 😊";
             document.getElementById('game-card').classList.add('animate__shakeX');
             setTimeout(() => {
                 document.getElementById('game-card').classList.remove('animate__shakeX');
@@ -100,13 +109,29 @@ const GameEngine = {
         }
     },
 
+    /**
+     * محرك النطق المصلح للكمبيوتر
+     */
     speak(text) {
         window.speechSynthesis.cancel();
-        const m = new SpeechSynthesisUtterance(text);
-        m.lang = 'ar-SA';
-        window.speechSynthesis.speak(m);
+        const msg = new SpeechSynthesisUtterance(text);
+        
+        // إذا لم يتم تحميل الأصوات بعد، حاول جلبها مجدداً
+        if (!this.selectedVoice) this.loadVoices();
+        
+        if (this.selectedVoice) {
+            msg.voice = this.selectedVoice;
+        }
+        
+        msg.lang = 'ar-SA';
+        msg.rate = 0.8; // سرعة هادئة لتناسب الأطفال
+        msg.pitch = 1.1; 
+        window.speechSynthesis.speak(msg);
     }
 };
+
+// حدث هام لمتصفح كروم على الكمبيوتر لضمان تحميل الأصوات
+window.speechSynthesis.onvoiceschanged = () => GameEngine.loadVoices();
 
 window.onload = () => {
     const btn = document.querySelector('.main-btn');
