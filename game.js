@@ -69,7 +69,7 @@ const GameEngine = {
 
         // تحديث النصوص والواجهة
         document.getElementById('mission-title').innerText = `${config.name} (المرحلة ${GameData.round}/5)`;
-        document.getElementById('target-name').innerText = `أين${this.target.n}؟`;
+        document.getElementById('target-name').innerText = `أين ${this.target.n}؟`;
         document.getElementById('score-val').innerText = GameData.score;
         this.updateProgressIcons();
 
