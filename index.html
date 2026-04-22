@@ -3,40 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة ذكاء الأطفال - الإصدار الاحترافي</title>
+    <title>مغامرة الذكاء الخمسة</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="start-overlay">
-        <div class="overlay-content animate__animated animate__bounceIn">
-            <h1>مستعد للمغامرة؟ 🚀</h1>
-            <p>تعلم الألوان، الأشكال، والحيوانات في لعبة واحدة!</p>
-            <button onclick="startApp()">ابدأ اللعب الآن!</button>
+    <div id="start-overlay" class="overlay">
+        <div class="glass-card animate__animated animate__fadeInDown">
+            <div class="hero-icon">🚀</div>
+            <h1>مغامرة العباقرة الصغار</h1>
+            <p>هل يمكنك اجتياز الـ 5 تحديات الكبرى؟</p>
+            <button class="main-btn" onclick="GameEngine.start()">ابدأ المغامرة الآن</button>
         </div>
     </div>
 
-    <div class="game-wrapper">
-        <div class="top-bar">
-            <div class="stat">🏆 المستوى: <span id="level">1</span></div>
-            <div id="timer-box" style="visibility: hidden;">⏳ <span id="timer-val">10</span></div>
-            <div class="stat">⭐ النقاط: <span id="score">0</span></div>
-        </div>
+    <div id="game-container" class="container">
+        <header class="game-header">
+            <div class="stars-track" id="stars-track">
+                <span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span>
+            </div>
+            <div class="score-pill">النقاط: <span id="score-val">0</span></div>
+        </header>
 
-        <main id="game-card" class="animate__animated">
-            <h1 id="question-text">أين هو </h1>
-            <h2 id="target-display">جاري التحميل...</h2>
+        <main id="game-card" class="game-card">
+            <div id="timer-bar"><div id="timer-fill"></div></div>
+            <h2 id="mission-title">المهمة الأولى</h2>
+            <h1 id="target-name">...</h1>
             
-            <div id="options-grid">
-                </div>
-
-            <div id="feedback-msg"></div>
+            <div id="options-grid" class="grid"></div>
+            
+            <div id="feedback-area"></div>
         </main>
+    </div>
 
-        <div class="controls">
-            <button class="icon-btn" onclick="GameEngine.speak()" title="إعادة سماع السؤال">🔊 اسمع مرة أخرى</button>
+    <div id="win-screen" class="overlay" style="display: none;">
+        <div class="glass-card">
+            <div class="hero-icon">🏆</div>
+            <h1>أنت عبقري حقيقي!</h1>
+            <p>لقد أنهيت جميع المستويات الخمسة بنجاح</p>
+            <div class="final-score">مجموع نقاطك: <span id="final-score-val">0</span></div>
+            <button class="main-btn" onclick="location.reload()">إعادة التحدي 🔄</button>
         </div>
     </div>
 
