@@ -1,58 +1,92 @@
-// إعدادات اللعبة العالمية
-const GameConfig = {
-    currentLevel: 1,
+// 1. قاعدة بيانات الألوان (احترافية وسهلة التوسيع)
+const COLOR_PALETTE = [
+    { name: "الأحمر", hex: "#FF5733" },
+    { name: "الأخضر", hex: "#33FF57" },
+    { name: "الأزرق", hex: "#3357FF" },
+    { name: "الأصفر", hex: "#F3FF33" },
+    { name: "البنفسجي", hex: "#8D33FF" },
+    { name: "البرتقالي", hex: "#FF8D33" }
+];
+
+// 2. حالة اللعبة الحالية
+let gameState = {
+    level: 1,
     score: 0,
-    difficultyMultiplier: 1.2,
-    colors: ["#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#8D33FF"]
+    targetColor: null,
+    isProcessing: false // لمنع الضغط المتكرر أثناء الأنيميشن
 };
 
-// كائن يمثل المحرك الذكي للعبة
 const LogicEngine = {
-    // توليد تحدي جديد بناءً على مستوى الطفل
+    // اختيار الألوان بناءً على المستوى
     generateChallenge: function() {
-        let numberOfOptions = Math.min(2 + Math.floor(GameConfig.currentLevel / 2), 6);
-        let targetIndex = Math.floor(Math.random() * numberOfOptions);
+        // زيادة عدد الخيارات تدريجياً من 2 إلى 6
+        const count = Math.min(2 + Math.floor(gameState.level / 3), COLOR_PALETTE.length);
+        const shuffled = [...COLOR_PALETTE].sort(() => 0.5 - Math.random());
+        const options = shuffled.slice(0, count);
         
-        return {
-            options: GameConfig.colors.slice(0, numberOfOptions),
-            correctIndex: targetIndex,
-            timeLimit: Math.max(10 - GameConfig.currentLevel, 3) // الوقت يقل مع تقدم المستوى
-        };
+        // اختيار اللون المستهدف عشوائياً من الخيارات المتاحة
+        gameState.targetColor = options[Math.floor(Math.random() * options.length)];
+        
+        return options;
     },
 
-    // معالجة الإجابة وتطوير الصعوبة
-    processAnswer: function(isCorrect) {
+    processAnswer: function(colorHex) {
+        if (gameState.isProcessing) return;
+        gameState.isProcessing = true;
+
+        const isCorrect = colorHex === gameState.targetColor.hex;
+        const feedbackEl = document.getElementById('feedback');
+        const container = document.getElementById('game-container');
+
         if (isCorrect) {
-            GameConfig.score += 10 * GameConfig.currentLevel;
-            GameConfig.currentLevel++;
-            this.showFeedback("أنت عبقري! ننتقل للمستوى " + GameConfig.currentLevel, "green");
+            gameState.score += 10;
+            gameState.level++;
+            this.updateUI("أحسنت! أنت ذكي جداً 🌟", "#2ECC71", "scale-up");
         } else {
-            this.showFeedback("حاول مجدداً، أنا أثق بك!", "orange");
-            // لا نخفض المستوى لكي لا يشعر الطفل بالإحباط، بل نثبته
+            this.updateUI("حاول مرة أخرى، أنت تستطيع! 💪", "#E74C3C", "shake");
         }
-        setTimeout(() => this.render(), 1000);
+
+        // إيقاف اللعب مؤقتاً لعرض النتيجة ثم الانتقال للتحدي التالي
+        setTimeout(() => {
+            feedbackEl.innerText = "";
+            container.className = ""; // إزالة تأثيرات الأنيميشن
+            gameState.isProcessing = false;
+            this.render();
+        }, 1500);
     },
 
-    showFeedback: function(msg, color) {
-        const f = document.getElementById('feedback');
-        f.innerText = msg;
-        f.style.color = color;
+    updateUI: function(msg, color, animationClass) {
+        const feedbackEl = document.getElementById('feedback');
+        const container = document.getElementById('game-container');
+        const scoreEl = document.getElementById('score-display'); // تأكد من إضافة هذا في HTML
+
+        feedbackEl.innerText = msg;
+        feedbackEl.style.color = color;
+        container.classList.add(animationClass);
+        if(scoreEl) scoreEl.innerText = `النقاط: ${gameState.score}`;
     },
 
     render: function() {
-        const challenge = this.generateChallenge();
-        const container = document.getElementById('options');
-        container.innerHTML = ''; 
+        const options = this.generateChallenge();
+        const optionsContainer = document.getElementById('options');
+        const targetNameDisplay = document.getElementById('target-color-name');
 
-        challenge.options.forEach((color, index) => {
+        // تحديث النص المستهدف
+        targetNameDisplay.innerText = gameState.targetColor.name;
+        targetNameDisplay.style.color = "#4A4A4A";
+
+        // بناء الأزرار
+        optionsContainer.innerHTML = ''; 
+        options.forEach(color => {
             const btn = document.createElement('button');
             btn.className = "game-btn";
-            btn.style.backgroundColor = color;
-            btn.onclick = () => this.processAnswer(index === challenge.correctIndex);
-            container.appendChild(btn);
+            btn.style.backgroundColor = color.hex;
+            btn.setAttribute('aria-label', color.name); // للوصول الشامل
+            btn.onclick = () => this.processAnswer(color.hex);
+            optionsContainer.appendChild(btn);
         });
     }
 };
 
-// بدء اللعبة عند تحميل الصفحة
+// تشغيل اللعبة
 window.onload = () => LogicEngine.render();
