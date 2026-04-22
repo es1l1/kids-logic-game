@@ -65,3 +65,31 @@ body {
 .option-card:hover { transform: scale(1.05) rotate(3deg); }
 
 #feedback-area { margin-top: 20px; font-weight: 900; font-size: 1.2rem; min-height: 30px; }
+/* تأثير الضغط الاحترافي */
+.option-card {
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 0 #bdc3c7; /* ظل سفلي يعطي شكل ثلاثي الأبعاد */
+    border: none !important;
+}
+
+.option-card:active {
+    transform: translateY(5px);
+    box-shadow: 0 2px 0 #bdc3c7;
+}
+
+/* تحسين شكل النجوم */
+.star {
+    font-size: 2rem;
+    margin: 0 5px;
+    display: inline-block;
+}
+
+.star.active {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
