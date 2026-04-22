@@ -1,12 +1,14 @@
-const GameData = {
-    level: 1,           // المستوى الحالي (1-5)
-    round: 1,           // المرحلة الحالية داخل المستوى (1-5)
+/**
+ * نظام إدارة الحالة (State Management)
+ * لفصل البيانات عن المنطق البرمجي
+ */
+const GameState = {
+    level: 1,
+    round: 1,
     score: 0,
     maxLevels: 5,
-    roundsPerLevel: 5,  // عدد المراحل المطلوبة في كل مستوى
+    roundsPerLevel: 5,
     isProcessing: false,
-    
-    // بنك المعلومات المتنوع
     assets: {
         colors: [
             {n: "الأخضر", i: "🌿", c: "#2ed573"}, {n: "الأزرق", i: "💎", c: "#1e90ff"},
@@ -36,10 +38,31 @@ const GameData = {
     }
 };
 
+/**
+ * المحرك الرئيسي للعبة (Game Engine)
+ */
 const GameEngine = {
+    // إعدادات الأصوات الخارجية
+    sounds: {
+        success: new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3'),
+        win: new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3')
+    },
+
     start() {
-        document.getElementById('start-overlay').style.display = 'none';
+        const overlay = document.getElementById('start-overlay');
+        if (overlay) overlay.classList.add('animate__fadeOut');
+        setTimeout(() => overlay.style.display = 'none', 500);
+        
+        this.initVoice();
         this.render();
+    },
+
+    /**
+     * تهيئة محرك الصوت لضمان العمل على جميع المتصفحات
+     */
+    initVoice() {
+        window.speechSynthesis.getVoices();
+        this.speak(""); // رسالة فارغة لفتح قناة الصوت
     },
 
     getStageConfig() {
@@ -50,120 +73,143 @@ const GameEngine = {
             { type: 'fruits', name: 'مزرعة الفواكه 🍓', count: 4, bg: '#ff9a9e' },
             { type: 'numbers', name: 'تحدي الأرقام 🔢', count: 6, bg: '#d57eeb' }
         ];
-        return configs[GameData.level - 1];
+        return configs[GameState.level - 1];
     },
 
     render() {
-        if (GameData.level > GameData.maxLevels) {
+        if (GameState.level > GameState.maxLevels) {
             this.showEnd();
             return;
         }
 
         const config = this.getStageConfig();
-        document.body.style.backgroundColor = config.bg;
+        this.applyTheme(config.bg);
         
-        // اختيار العناصر عشوائياً لكل مرحلة
-        const pool = [...GameData.assets[config.type]].sort(() => 0.5 - Math.random());
-        const options = pool.slice(0, config.count);
+        // اختيار العناصر بنظام "عدم التكرار"
+        const options = this.shuffle([...GameState.assets[config.type]]).slice(0, config.count);
         this.target = options[Math.floor(Math.random() * options.length)];
 
-        // تحديث النصوص والواجهة
-        document.getElementById('mission-title').innerText = `${config.name} (المرحلة ${GameData.round}/5)`;
+        // تحديث واجهة المستخدم
+        document.getElementById('mission-title').innerText = `${config.name} (المرحلة ${GameState.round}/5)`;
         document.getElementById('target-name').innerText = `أين ${this.target.n}؟`;
-        document.getElementById('score-val').innerText = GameData.score;
+        document.getElementById('score-val').innerText = GameState.score;
+        
         this.updateProgressIcons();
-
-        const grid = document.getElementById('options-grid');
-        grid.innerHTML = ''; 
-        grid.style.gridTemplateColumns = options.length > 4 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
-
-        options.forEach(item => {
-            const btn = document.createElement('button');
-            btn.className = 'option-card animate__animated animate__zoomIn';
-            btn.style.backgroundColor = item.c;
-            btn.innerHTML = item.i;
-            btn.onclick = () => this.check(item);
-            grid.appendChild(btn);
-        });
-
-        this.speak(`أين هو ${this.target.n}`);
+        this.buildGrid(options);
+        
+        // نطق السؤال بتأخير بسيط ليعطي شعوراً احترافياً
+        setTimeout(() => this.speak(`أين هو ${this.target.n}`), 300);
     },
 
-    check(selected) {
-        if (GameData.isProcessing) return;
-        GameData.isProcessing = true;
+    applyTheme(color) {
+        document.body.style.backgroundColor = color;
+    },
+
+    shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    },
+
+    buildGrid(options) {
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        grid.style.gridTemplateColumns = options.length > 4 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
+
+        options.forEach((item, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-card animate__animated animate__fadeInUp';
+            btn.style.animationDelay = `${index * 0.1}s`;
+            btn.style.backgroundColor = item.c;
+            btn.innerHTML = `<span class="icon-inner">${item.i}</span>`;
+            btn.onclick = () => this.check(item, btn);
+            grid.appendChild(btn);
+        });
+    },
+
+    check(selected, btnElement) {
+        if (GameState.isProcessing) return;
+        GameState.isProcessing = true;
 
         const feedback = document.getElementById('feedback-area');
+        
         if (selected.n === this.target.n) {
+            btnElement.classList.add('correct-pulse');
             this.handleSuccess(feedback);
         } else {
+            btnElement.classList.add('error-shake');
             this.handleFailure(feedback);
         }
     },
 
     handleSuccess(feedback) {
-        GameData.score += 10;
-        feedback.innerHTML = "<span style='color:#2ed573; font-size:1.5rem;'>بطل! إجابة صحيحة 🌟</span>";
-        new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3').play().catch(()=>{});
+        GameState.score += 10;
+        feedback.innerHTML = "<span class='status-success'>بطل! إجابة صحيحة 🌟</span>";
+        this.sounds.success.play().catch(() => {});
 
         setTimeout(() => {
-            if (GameData.round < GameData.roundsPerLevel) {
-                GameData.round++; // نزيد المرحلة داخل نفس المستوى
+            if (GameState.round < GameState.roundsPerLevel) {
+                GameState.round++;
             } else {
-                GameData.level++; // ننتقل للمستوى التالي
-                GameData.round = 1; // نصفر المراحل للمستوى الجديد
+                GameState.level++;
+                GameState.round = 1;
             }
-            GameData.isProcessing = false;
+            GameState.isProcessing = false;
             feedback.innerHTML = "";
             this.render();
         }, 1500);
     },
 
     handleFailure(feedback) {
-        feedback.innerHTML = "<span style='color:#ff4757; font-size:1.5rem;'>حاول مرة أخرى 😊</span>";
-        document.getElementById('game-card').classList.add('animate__shakeX');
+        feedback.innerHTML = "<span class='status-error'>حاول مرة أخرى 😊</span>";
+        const card = document.getElementById('game-card');
+        card.classList.add('animate__shakeX');
+        
         setTimeout(() => {
-            document.getElementById('game-card').classList.remove('animate__shakeX');
-            GameData.isProcessing = false;
-        }, 1000);
+            card.classList.remove('animate__shakeX');
+            GameState.isProcessing = false;
+        }, 800);
     },
 
     updateProgressIcons() {
         const stars = document.querySelectorAll('.star');
         stars.forEach((s, i) => {
-            // نضيء النجوم بناءً على المستويات المكتملة
-            if (i < GameData.level - 1) {
-                s.style.opacity = "1";
-                s.style.filter = "grayscale(0)";
-            } else {
-                s.style.opacity = "0.2";
-                s.style.filter = "grayscale(1)";
-            }
+            const isActive = i < GameState.level - 1;
+            s.style.opacity = isActive ? "1" : "0.2";
+            s.style.filter = isActive ? "grayscale(0) drop-shadow(0 0 5px gold)" : "grayscale(1)";
+            if (isActive) s.classList.add('animate__animated', 'animate__bounceIn');
         });
     },
 
     speak(text) {
         window.speechSynthesis.cancel();
-        const m = new SpeechSynthesisUtterance(text);
-        m.lang = 'ar-SA';
-        window.speechSynthesis.speak(m);
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'ar-SA';
+        msg.rate = 0.9;
+        msg.pitch = 1.1; // صوت أكثر حيوية للأطفال
+        window.speechSynthesis.speak(msg);
     },
 
     showEnd() {
+        this.sounds.win.play().catch(() => {});
         const card = document.getElementById('game-card');
+        card.className = "game-card final-win animate__animated animate__zoomIn";
         card.innerHTML = `
-            <div style="padding: 40px; text-align:center;">
-                <h1 style="font-size:3rem;">🎊 مبروك يا عبقري! 🎊</h1>
-                <p style="font-size:1.5rem;">لقد اجتزت جميع المستويات والمراحل بنجاح!</p>
-                <div style="font-size:2rem; margin:20px; color:#6c5ce7;">مجموع نقاطك: ${GameData.score}</div>
-                <button onclick="location.reload()" class="main-btn">العب من جديد 🔄</button>
+            <div class="end-content">
+                <h1 class="bounce-text">🎊 عبقري مذهل! 🎊</h1>
+                <p>لقد أثبتّ أنك بطل الألوان والأشكال!</p>
+                <div class="final-score-pill">مجموع نقاطك: ${GameState.score}</div>
+                <button onclick="location.reload()" class="retry-btn">مغامرة جديدة؟ 🔄</button>
             </div>
         `;
-        document.body.style.background = "linear-gradient(45deg, #6c5ce7, #a29bfe)";
+        document.body.style.background = "linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%)";
     }
 };
 
-window.onload = () => {
+/**
+ * تهيئة اللعبة
+ */
+window.addEventListener('DOMContentLoaded', () => {
     const startBtn = document.querySelector('.main-btn');
-    if(startBtn) startBtn.onclick = () => GameEngine.start();
-};
+    if (startBtn) {
+        startBtn.addEventListener('click', () => GameEngine.start());
+    }
+});
