@@ -1,0 +1,33 @@
+body {
+    font-family: 'Cairo', sans-serif; /* خط عربي احترافي */
+    background-color: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#game-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.game-btn {
+    width: 80px;
+    height: 80px;
+    margin: 10px;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: transform 0.2s; /* حركة عند الضغط */
+}
+
+.game-btn:active {
+    transform: scale(0.9);
+}
