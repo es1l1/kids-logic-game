@@ -3,20 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الذكاء للأطفال</title>
+    <title>لعبة ذكاء الأطفال - الإصدار الاحترافي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <h1>أين هو اللون <span id="target-color-name">...</span>؟</h1>
-        <div id="options"></div>
-        <div id="game-container">
-    <h1 id="instruction">أين هو اللون <span id="target-color-name">...</span>؟</h1>
-    <div id="options" class="options-grid"></div>
-    <p id="feedback"></p>
-</div>
-        <p id="feedback"></p>
+
+    <div id="start-overlay">
+        <div class="overlay-content animate__animated animate__bounceIn">
+            <h1>مستعد للمغامرة؟ 🚀</h1>
+            <p>تعلم الألوان، الأشكال، والحيوانات في لعبة واحدة!</p>
+            <button onclick="startApp()">ابدأ اللعب الآن!</button>
+        </div>
     </div>
+
+    <div class="game-wrapper">
+        <div class="top-bar">
+            <div class="stat">🏆 المستوى: <span id="level">1</span></div>
+            <div id="timer-box" style="visibility: hidden;">⏳ <span id="timer-val">10</span></div>
+            <div class="stat">⭐ النقاط: <span id="score">0</span></div>
+        </div>
+
+        <main id="game-card" class="animate__animated">
+            <h1 id="question-text">أين هو اللون...</h1>
+            <h2 id="target-display">جاري التحميل...</h2>
+            
+            <div id="options-grid">
+                </div>
+
+            <div id="feedback-msg"></div>
+        </main>
+
+        <div class="controls">
+            <button class="icon-btn" onclick="GameEngine.speak()" title="إعادة سماع السؤال">🔊 اسمع مرة أخرى</button>
+        </div>
+    </div>
+
     <script src="game.js"></script>
 </body>
 </html>
